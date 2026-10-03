@@ -1,5 +1,7 @@
 # Terraform IaC Patterns
 
+[![Terraform](https://github.com/detahermana/terraform-iac-patterns/actions/workflows/terraform.yml/badge.svg)](https://github.com/detahermana/terraform-iac-patterns/actions/workflows/terraform.yml)
+
 A collection of Terraform modules that encode how I structure infrastructure as
 code across Azure, AWS, and GCP. Each module is small, opinionated, and
 documented with the reasoning behind its choices — not just what it creates.
@@ -67,7 +69,7 @@ Reference it by relative path, or point at a tagged release of this repository.
 
 ```hcl
 module "network" {
-  source = "git::https://github.com/example-org/terraform-iac-patterns.git//modules/azure-network?ref=v1.0.0"
+  source = "git::https://github.com/detahermana/terraform-iac-patterns.git//modules/azure-network?ref=v1.0.0"
 
   resource_group_name = "rg-uks-p-app"
   location            = "uksouth"
@@ -85,8 +87,12 @@ module "network" {
 
 ## Validating
 
-Every module and example in this repository passes `terraform fmt -check` and
-`terraform validate`. To check locally:
+Every module and example in this repository passes `terraform fmt -check`,
+`terraform validate`, `tflint`, and a Trivy misconfiguration scan. These run
+automatically in CI on every push and pull request — see
+[`.github/workflows/terraform.yml`](.github/workflows/terraform.yml).
+
+To check locally:
 
 ```bash
 # Format

@@ -1,0 +1,88 @@
+name: Terraform
+
+# ---------------------------------------------------------------------------
+# Static validation for every module and example.
+#
+#   - fmt       formatting is not a style opinion here, it is a PR gate
+#   - validate  every module/example must init (backend=false) and validate
+#   - tflint    provider-aware linting beyond what validate catches
+#   - trivy     misconfiguration / security scan on the Terraform source
+#
+# No cloud credentials are used: init runs with -backend=false and validate
+# never contacts a provider API, so this workflow is safe for forks.
+# ---------------------------------------------------------------------------
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  fmt:
+    name: Format check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.8"
+
+      - name: terraform fmt -check -recursive
+        run: terraform fmt -check -recursive
+
+  validate:
+    name: Validate modules and examples
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: hashicorp/setup-terraform@b9cd54a3c349d3f38e8881555d616ced269862dd # v3.1.2
+        with:
+          terraform_version: "1.9.8"
+
+      - name: Init and validate every module and example
+        run: |
+          set -euo pipefail
+          for d in modules/*/ examples/*/; do
+            echo "::group::$d"
+            (cd "$d" && terraform init -backend=false -input=false -no-color && terraform validate -no-color)
+            echo "::endgroup::"
+          done
+
+  tflint:
+    name: tflint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      - uses: terraform-linters/setup-tflint@90f302c255ef959cbfb4bd10581afecdb7ece3e6 # v4.1.1
+        with:
+          tflint_version: v0.53.0
+
+      - name: Run tflint on every module and example
+        run: |
+          set -euo pipefail
+          tflint --init
+          tflint --recursive --format compact
+
+  trivy:
+    name: trivy config scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+
+      # Pinned to a commit SHA: version tags on third-party Actions are
+      # mutable and can be force-pushed. Commit SHAs cannot.
+      - name: Trivy misconfiguration scan
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          scan-type: config
+          scan-ref: .
+          severity: CRITICAL,HIGH
+          exit-code: "1"
+          format: table
