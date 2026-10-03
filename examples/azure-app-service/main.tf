@@ -125,12 +125,14 @@ module "app" {
     WEBSITE_RUN_FROM_PACKAGE = "1"
   }
 
-  # Uncomment to require Entra ID login. Needs an app registration.
+  # Uncomment to require Entra ID login. Needs an app registration; add the
+  # variables this references (client ID, client secret, tenant ID) when you
+  # enable it.
   #
-  # authentication_enabled              = true
-  # authentication_client_id            = var.auth_client_id
-  # authentication_client_secret        = var.auth_client_secret
-  # authentication_tenant_id            = var.auth_tenant_id
+  # authentication_enabled               = true
+  # authentication_client_id             = var.app_registration_client_id
+  # authentication_client_secret         = var.app_registration_client_secret
+  # authentication_tenant_id             = var.tenant_id
   # authentication_allowed_redirect_urls = ["https://app.example.org"]
 }
 

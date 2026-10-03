@@ -1,13 +1,12 @@
 # azure-linux-vm
 
 Creates a Linux virtual machine with a network interface, an optional data
-disk, and the Azure Monitor agent — plus a generated admin password.
+disk, the Azure Monitor agent, and SSH-key-only access.
 
 ## What it creates
 
 | Resource | Notes |
 |---|---|
-| `random_password` | 20 characters, mixed class, generated locally |
 | `azurerm_network_interface` | Static or dynamic private IP, bound to a subnet |
 | `azurerm_linux_virtual_machine` | Optional availability zone, marketplace plan |
 | `azurerm_managed_disk` | Optional; created only when `var.data_disk` is set |
@@ -20,14 +19,15 @@ The network interface is its own resource. Splitting them means the interface �
 and therefore the private IP address — can survive a VM rebuild, and it makes
 the addressing explicit in the plan instead of implicit in the VM block.
 
-## Why the password is generated, not a variable
+## Why SSH key only
 
-A password passed in as a variable ends up in a `.tfvars` file, in shell
-history, and in CI logs. Generating it inside the module keeps it out of the
-call site. Read it once after apply and move it to a secrets store:
+Password authentication is disabled, so the module never generates or stores
+a credential. A generated password would still land in Terraform state, where
+it has to be protected and rotated; a public key does not. The caller passes
+`admin_ssh_public_key`; the private key never reaches the module or its state.
 
-```bash
-terraform output -raw admin_password
+```hcl
+admin_ssh_public_key = file("~/.ssh/id_ed25519.pub")
 ```
 
 ## Why `ignore_changes` on those fields
@@ -55,6 +55,8 @@ module "app_vm" {
   size                = "Standard_D2s_v5"
   zone                = "1"
   tags                = local.tags
+
+  admin_ssh_public_key = file("~/.ssh/id_ed25519.pub")
 
   image = {
     publisher = "RedHat"
@@ -95,6 +97,7 @@ module "app_vm" {
 | `size` | `string` | — | VM size |
 | `image` | `object` | — | Marketplace image reference |
 | `admin_username` | `string` | `azureuser` | Local admin username |
+| `admin_ssh_public_key` | `string` | — | SSH public key for the admin user (required) |
 | `private_ip_address` | `string` | `null` | Static IP; null is dynamic |
 | `dns_servers` | `list(string)` | `[]` | NIC DNS servers |
 | `zone` | `string` | `null` | Availability zone |
@@ -113,10 +116,10 @@ module "app_vm" {
 | `private_ip_address` | NIC private IP |
 | `network_interface_id` | NIC ID |
 | `data_disk_id` | Data disk ID, or `null` |
-| `admin_password` | Generated password (sensitive) |
 
 ## Note
 
-`admin_password` is a sensitive output. It is still written to state — treat
-the state file as a secret, and use a remote backend with encryption and
-locking. See the repository README for the backend note.
+No credential is created or stored by this module. State still holds other
+sensitive values (for example resource IDs), so treat the state file as a
+secret and use a remote backend with encryption and locking. See the
+repository README for the backend note.

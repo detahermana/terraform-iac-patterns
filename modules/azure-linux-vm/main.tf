@@ -6,29 +6,17 @@ terraform {
       source  = "hashicorp/azurerm"
       version = ">= 3.100.0"
     }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.6.0"
-    }
   }
 }
 
 # ---------------------------------------------------------------------------
-# Admin password
+# Access model
 #
-# Generated locally so it never has to be passed in as a variable, and never
-# lands in the call site. Retrieve it with `terraform output -raw admin_password`
-# when the apply is done, then move it into a secrets store.
+# SSH key only. Password authentication is disabled and no password is
+# generated, so there is no credential to leak, rotate, or store in state.
+# The public key is required input — the caller supplies it, and the private
+# key never reaches this module or its state.
 # ---------------------------------------------------------------------------
-resource "random_password" "admin" {
-  length           = 20
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-  min_lower        = 2
-  min_upper        = 2
-  min_numeric      = 2
-  min_special      = 2
-}
 
 # ---------------------------------------------------------------------------
 # Network interface
@@ -62,10 +50,14 @@ resource "azurerm_linux_virtual_machine" "this" {
   size                            = var.size
   zone                            = var.zone
   admin_username                  = var.admin_username
-  admin_password                  = random_password.admin.result
-  disable_password_authentication = false
+  disable_password_authentication = true
   network_interface_ids           = [azurerm_network_interface.this.id]
   tags                            = var.tags
+
+  admin_ssh_key {
+    username   = var.admin_username
+    public_key = var.admin_ssh_public_key
+  }
 
   boot_diagnostics {}
 

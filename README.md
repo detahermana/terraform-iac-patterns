@@ -15,7 +15,7 @@ domains, addresses, or resource names appear anywhere in this repository.
 | Module | Provider | What it does |
 |---|---|---|
 | [`azure-network`](modules/azure-network) | Azure | Resource group, VNet, subnets with optional service delegation, NSG with ordered rules, subnet associations |
-| [`azure-linux-vm`](modules/azure-linux-vm) | Azure | Linux VM with NIC, optional data disk, generated password, Azure Monitor agent |
+| [`azure-linux-vm`](modules/azure-linux-vm) | Azure | Linux VM with NIC, optional data disk, SSH-key-only access, Azure Monitor agent |
 | [`azure-app-service`](modules/azure-app-service) | Azure | App Service plan and web app: HTTPS-only, VNet-integrated, deny-by-default IP restrictions, optional Entra ID auth |
 | [`aws-network`](modules/aws-network) | AWS | VPC, public/private subnets across AZs, internet gateway, named security groups with explicit ingress and egress |
 | [`gcp-vm`](modules/gcp-vm) | GCP | VPC, subnet, tag-scoped firewall rules, private compute instance with Shielded VM |

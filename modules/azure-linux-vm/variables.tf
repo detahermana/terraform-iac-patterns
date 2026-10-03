@@ -59,6 +59,11 @@ variable "admin_username" {
   description = "Local administrator username."
 }
 
+variable "admin_ssh_public_key" {
+  type        = string
+  description = "SSH public key for the admin user. Required: the VM has password authentication disabled, so this is the only way in. The private key is never passed to the module."
+}
+
 # ---------------------------------------------------------------------------
 # Disks
 # ---------------------------------------------------------------------------

@@ -22,9 +22,3 @@ output "data_disk_id" {
   description = "ID of the data disk, or null when none was created."
   value       = var.data_disk == null ? null : azurerm_managed_disk.data[0].id
 }
-
-output "admin_password" {
-  description = "Generated admin password. Treat as a secret and read with `terraform output -raw admin_password`."
-  value       = random_password.admin.result
-  sensitive   = true
-}

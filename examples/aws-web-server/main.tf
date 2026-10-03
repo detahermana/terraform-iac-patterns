@@ -34,7 +34,13 @@ locals {
 
 # ---------------------------------------------------------------------------
 # Network: VPC, subnets, internet gateway, and the load balancer group
+#
+# trivy:ignore:AVD-AWS-0164 — a public subnet is the point of this example: the
+# load balancer lives in it and needs a public IP. In production, place only
+# internet-facing resources here and keep application hosts in the private
+# subnets.
 # ---------------------------------------------------------------------------
+#trivy:ignore:AVD-AWS-0164
 module "network" {
   source = "../../modules/aws-network"
 
@@ -78,7 +84,13 @@ module "network" {
 #
 # References the load balancer group from the first call. That reference is why
 # this is a second module call rather than another entry in the map above.
+#
+# trivy:ignore:AVD-AWS-0104 — the application tier needs unrestricted egress on
+# 443 for package updates and third-party API calls. Egress to a fixed set of
+# addresses is not practical for a general-purpose web tier; if your workload
+# only talks to known endpoints, scope this down instead.
 # ---------------------------------------------------------------------------
+#trivy:ignore:AVD-AWS-0104
 module "app_security" {
   source = "../../modules/aws-network"
 
